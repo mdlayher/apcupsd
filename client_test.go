@@ -1,6 +1,7 @@
 package apcupsd
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -12,7 +13,7 @@ import (
 )
 
 func TestClientNoKnownKeyValuePairs(t *testing.T) {
-	c, done := testClient(t, func(in []byte) [][]byte {
+	c, done := testClient(t, func() [][]byte {
 		lenb, kvb := kvBytes("FOO : BAR")
 		return [][]byte{
 			lenb,
@@ -58,7 +59,7 @@ func TestClientAllTypesKeyValuePairs(t *testing.T) {
 		NominalPower:    865,
 	}
 
-	c, done := testClient(t, func(in []byte) [][]byte {
+	c, done := testClient(t, func() [][]byte {
 		var out [][]byte
 		for _, kv := range kvs {
 			lenb, kvb := kvBytes(kv)
@@ -91,7 +92,7 @@ func TestClientAllTypesKeyValuePairs(t *testing.T) {
 	}
 }
 
-func testClient(t *testing.T, fn func(in []byte) [][]byte) (*Client, func()) {
+func testClient(t *testing.T, fn func() [][]byte) (*Client, func()) {
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("failed to start listener: %v", err)
@@ -111,12 +112,19 @@ func testClient(t *testing.T, fn func(in []byte) [][]byte) (*Client, func()) {
 		}
 
 		in := make([]byte, 128)
-		if _, err := c.Read(in); err != nil {
+		n, err := c.Read(in)
+		if err != nil {
 			panic(fmt.Sprintf("failed to read from connection: %v", err))
 		}
 
+		status := []byte{0, 6, 's', 't', 'a', 't', 'u', 's'}
+		if want, got := status, in[:n]; !bytes.Equal(want, got) {
+			panic(fmt.Sprintf("unexpected request from Client:\n- want: %v\n - got: %v",
+				want, got))
+		}
+
 		// Run against test function and append EOF to end of output bytes
-		out := fn(in)
+		out := fn()
 		out = append(out, []byte{0, 0})
 
 		for _, o := range out {
