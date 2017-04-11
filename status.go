@@ -56,9 +56,11 @@ type Status struct {
 	BatteryVoltage              float64
 	LastTransfer                string
 	NumberTransfers             int
+	XOnBattery                  time.Time
 	TimeOnBattery               time.Duration
 	CumulativeTimeOnBattery     time.Duration
-	XOffBattery                 string
+	XOffBattery                 time.Time
+	LastSelftest                time.Time
 	Selftest                    bool
 	StatusFlags                 string
 	SerialNumber                string
@@ -142,9 +144,11 @@ const (
 	keyBattV     = "BATTV"
 	keyLastXfer  = "LASTXFER"
 	keyNumXfers  = "NUMXFERS"
+	keyXOnBat    = "XONBATT"
 	keyTOnBatt   = "TONBATT"
 	keyCumOnBatt = "CUMONBATT"
 	keyXOffBat   = "XOFFBATT"
+	keyLastStest = "LASTSTEST"
 	keySelftest  = "SELFTEST"
 	keyStatFlag  = "STATFLAG"
 	keySerialNo  = "SERIALNO"
@@ -182,8 +186,6 @@ func (s *Status) parseKVString(k string, v string) bool {
 		s.Sense = v
 	case keyLastXfer:
 		s.LastTransfer = v
-	case keyXOffBat:
-		s.XOffBattery = v
 	case keyStatFlag:
 		s.StatusFlags = v
 	case keySerialNo:
@@ -243,6 +245,12 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 		s.Date, err = time.Parse(timeFormatLong, v)
 	case keyStartTime:
 		s.StartTime, err = time.Parse(timeFormatLong, v)
+	case keyXOnBat:
+		s.XOnBattery, err = time.Parse(timeFormatLong, v)
+	case keyXOffBat:
+		s.XOffBattery, err = time.Parse(timeFormatLong, v)
+	case keyLastStest:
+		s.LastSelftest, err = time.Parse(timeFormatLong, v)
 	case keyBattDate:
 		s.BatteryDate, err = time.Parse(timeFormatShort, v)
 	case keyEndAPC:
