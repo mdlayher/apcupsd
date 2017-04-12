@@ -242,19 +242,19 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	var err error
 	switch k {
 	case keyDate:
-		s.Date, err = time.Parse(timeFormatLong, v)
+		s.Date, err = parseOptionalTime(timeFormatLong, v)
 	case keyStartTime:
-		s.StartTime, err = time.Parse(timeFormatLong, v)
+		s.StartTime, err = parseOptionalTime(timeFormatLong, v)
 	case keyXOnBat:
-		s.XOnBattery, err = time.Parse(timeFormatLong, v)
+		s.XOnBattery, err = parseOptionalTime(timeFormatLong, v)
 	case keyXOffBat:
 		s.XOffBattery, err = parseOptionalTime(timeFormatLong, v)
 	case keyLastStest:
-		s.LastSelftest, err = time.Parse(timeFormatLong, v)
+		s.LastSelftest, err = parseOptionalTime(timeFormatLong, v)
 	case keyBattDate:
-		s.BatteryDate, err = time.Parse(timeFormatShort, v)
+		s.BatteryDate, err = parseOptionalTime(timeFormatShort, v)
 	case keyEndAPC:
-		s.EndAPC, err = time.Parse(timeFormatLong, v)
+		s.EndAPC, err = parseOptionalTime(timeFormatLong, v)
 	default:
 		return false, nil
 	}
