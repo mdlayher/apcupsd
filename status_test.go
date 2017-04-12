@@ -51,7 +51,7 @@ func TestStatus_parseKV(t *testing.T) {
 		},
 		{
 			desc: "N/A time.Time",
-			kv: "XONBATT : N/A",
+			kv: "XOFFBATT : N/A",
 			s: &Status{
 				XOnBattery: time.Time{},
 			},
