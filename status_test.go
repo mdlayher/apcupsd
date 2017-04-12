@@ -50,6 +50,13 @@ func TestStatus_parseKV(t *testing.T) {
 			},
 		},
 		{
+			desc: "N/A time.Time",
+			kv: "XONBATT : N/A",
+			s: &Status{
+				XOnBattery: time.Time{},
+			},
+		},
+		{
 			desc: "OK time.Duration",
 			kv:   "TIMELEFT: 10.5 Minutes",
 			s: &Status{

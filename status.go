@@ -248,7 +248,7 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	case keyXOnBat:
 		s.XOnBattery, err = time.Parse(timeFormatLong, v)
 	case keyXOffBat:
-		s.XOffBattery, err = time.Parse(timeFormatLong, v)
+		s.XOffBattery, err = parseOptionalTime(timeFormatLong, v)
 	case keyLastStest:
 		s.LastSelftest, err = time.Parse(timeFormatLong, v)
 	case keyBattDate:
@@ -311,4 +311,16 @@ func parseDuration(d string) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(fmt.Sprintf("%s%s", num, unit))
+}
+
+// parseOptionalTime parses a time string.
+// In addition to the specified layout, it also accepts the  special value "N/A"
+// (which apcupsd reports for some values and conditions); this value is mapped
+// to time.Time{}. The caller can check for this with time.IsZero().
+func parseOptionalTime(layout, value string) (time.Time, error) {
+	if value == "N/A" {
+		return time.Time{}, nil
+	}
+
+	return time.Parse(layout, value)
 }
