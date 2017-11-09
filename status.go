@@ -279,6 +279,11 @@ func (s *Status) parseKVDuration(k string, v string) (bool, error) {
 	case keyMaxTime:
 		s.MaximumTime, err = parse()
 	case keyAlarmDel:
+		// No alarm delay configured.
+		if v == "No alarm" {
+			break
+		}
+
 		s.AlarmDel, err = parse()
 	case keyTOnBatt:
 		s.TimeOnBattery, err = parse()

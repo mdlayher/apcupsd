@@ -51,7 +51,7 @@ func TestStatus_parseKV(t *testing.T) {
 		},
 		{
 			desc: "N/A time.Time",
-			kv: "XOFFBATT : N/A",
+			kv:   "XOFFBATT : N/A",
 			s: &Status{
 				XOnBattery: time.Time{},
 			},
@@ -82,6 +82,13 @@ func TestStatus_parseKV(t *testing.T) {
 			kv:   "SELFTEST: YES",
 			s: &Status{
 				Selftest: true,
+			},
+		},
+		{
+			desc: "No alarm ALARMDEL",
+			kv:   "ALARMDEL: No alarm",
+			s: &Status{
+				AlarmDel: 0,
 			},
 		},
 	}
