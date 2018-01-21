@@ -91,6 +91,27 @@ func TestStatus_parseKV(t *testing.T) {
 				AlarmDel: 0,
 			},
 		},
+		{
+			desc: "OK ITEMP",
+			kv:   "ITEMP    : 35.1 C",
+			s: &Status{
+				InternalTemp: 35.1,
+			},
+		},
+		{
+			desc: "OK OUTPUTV",
+			kv:   "OUTPUTV  : 230.4 Volts",
+			s: &Status{
+				OutputVoltage: 230.4,
+			},
+		},
+		{
+			desc: "OK LINEFREQ",
+			kv:   "LINEFREQ : 50.0 Hz",
+			s: &Status{
+				LineFrequency: 50.0,
+			},
+		},
 	}
 
 	for _, tt := range tests {

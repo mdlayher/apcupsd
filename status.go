@@ -70,6 +70,9 @@ type Status struct {
 	NominalPower                int
 	Firmware                    string
 	EndAPC                      time.Time
+	InternalTemp                float64
+	OutputVoltage               float64
+	LineFrequency               float64
 }
 
 // parseKV parses an input key/value string in "key : value" format, and
@@ -119,45 +122,48 @@ func (s *Status) parseKV(kv string) error {
 
 // List of keys sent by a NIS, used to map values to Status fields.
 const (
-	keyAPC       = "APC"
-	keyDate      = "DATE"
-	keyHostname  = "HOSTNAME"
-	keyVersion   = "VERSION"
-	keyUPSName   = "UPSNAME"
-	keyCable     = "CABLE"
-	keyDriver    = "DRIVER"
-	keyUPSMode   = "UPSMODE"
-	keyStartTime = "STARTTIME"
-	keyModel     = "MODEL"
-	keyStatus    = "STATUS"
-	keyLineV     = "LINEV"
-	keyLoadPct   = "LOADPCT"
-	keyBCharge   = "BCHARGE"
-	keyTimeLeft  = "TIMELEFT"
-	keyMBattChg  = "MBATTCHG"
-	keyMinTimeL  = "MINTIMEL"
-	keyMaxTime   = "MAXTIME"
-	keySense     = "SENSE"
-	keyLoTrans   = "LOTRANS"
-	keyHiTrans   = "HITRANS"
-	keyAlarmDel  = "ALARMDEL"
-	keyBattV     = "BATTV"
-	keyLastXfer  = "LASTXFER"
-	keyNumXfers  = "NUMXFERS"
-	keyXOnBat    = "XONBATT"
-	keyTOnBatt   = "TONBATT"
-	keyCumOnBatt = "CUMONBATT"
-	keyXOffBat   = "XOFFBATT"
-	keyLastStest = "LASTSTEST"
-	keySelftest  = "SELFTEST"
-	keyStatFlag  = "STATFLAG"
-	keySerialNo  = "SERIALNO"
-	keyBattDate  = "BATTDATE"
-	keyNomInV    = "NOMINV"
-	keyNomBattV  = "NOMBATTV"
-	keyNomPower  = "NOMPOWER"
-	keyFirmware  = "FIRMWARE"
-	keyEndAPC    = "END APC"
+	keyAPC           = "APC"
+	keyDate          = "DATE"
+	keyHostname      = "HOSTNAME"
+	keyVersion       = "VERSION"
+	keyUPSName       = "UPSNAME"
+	keyCable         = "CABLE"
+	keyDriver        = "DRIVER"
+	keyUPSMode       = "UPSMODE"
+	keyStartTime     = "STARTTIME"
+	keyModel         = "MODEL"
+	keyStatus        = "STATUS"
+	keyLineV         = "LINEV"
+	keyLoadPct       = "LOADPCT"
+	keyBCharge       = "BCHARGE"
+	keyTimeLeft      = "TIMELEFT"
+	keyMBattChg      = "MBATTCHG"
+	keyMinTimeL      = "MINTIMEL"
+	keyMaxTime       = "MAXTIME"
+	keySense         = "SENSE"
+	keyLoTrans       = "LOTRANS"
+	keyHiTrans       = "HITRANS"
+	keyAlarmDel      = "ALARMDEL"
+	keyBattV         = "BATTV"
+	keyLastXfer      = "LASTXFER"
+	keyNumXfers      = "NUMXFERS"
+	keyXOnBat        = "XONBATT"
+	keyTOnBatt       = "TONBATT"
+	keyCumOnBatt     = "CUMONBATT"
+	keyXOffBat       = "XOFFBATT"
+	keyLastStest     = "LASTSTEST"
+	keySelftest      = "SELFTEST"
+	keyStatFlag      = "STATFLAG"
+	keySerialNo      = "SERIALNO"
+	keyBattDate      = "BATTDATE"
+	keyNomInV        = "NOMINV"
+	keyNomBattV      = "NOMBATTV"
+	keyNomPower      = "NOMPOWER"
+	keyFirmware      = "FIRMWARE"
+	keyEndAPC        = "END APC"
+	keyITemp         = "ITEMP"
+	keyOutV          = "OUTPUTV"
+	keyLineFrequency = "LINEFREQ"
 )
 
 // parseKVString parses a simple string into the appropriate Status field.
@@ -229,6 +235,12 @@ func (s *Status) parseKVFloat(k string, v string) (bool, error) {
 		s.NominalInputVoltage, err = parse()
 	case keyNomBattV:
 		s.NominalBatteryVoltage, err = parse()
+	case keyITemp:
+		s.InternalTemp, err = parse()
+	case keyOutV:
+		s.OutputVoltage, err = parse()
+	case keyLineFrequency:
+		s.LineFrequency, err = parse()
 	default:
 		return false, nil
 	}
