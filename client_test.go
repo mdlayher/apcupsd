@@ -136,7 +136,7 @@ func testClient(t *testing.T, fn func() [][]byte) (*Client, func()) {
 		wg.Done()
 	}()
 
-	c, err := Dial("tcp", l.Addr().String())
+	c, err := Dial("tcp", dialAddr(l))
 	if err != nil {
 		t.Fatalf("failed to dial Client: %v", err)
 	}
@@ -156,4 +156,12 @@ func kvBytes(kv string) ([]byte, []byte) {
 	binary.BigEndian.PutUint16(lenb, uint16(len(kv)))
 
 	return lenb, []byte(kv)
+}
+
+// dialAddr returns a valid net.Dial address to dial using network "tcp".
+func dialAddr(ln net.Listener) string {
+	addr := ln.Addr().String()
+	addr = strings.TrimPrefix(addr, "[::]")
+	addr = strings.TrimPrefix(addr, "0.0.0.0")
+	return addr
 }
