@@ -2,6 +2,7 @@ package apcupsd
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -90,6 +91,22 @@ func TestClientAllTypesKeyValuePairs(t *testing.T) {
 		t.Fatalf("unexpected Status:\n- want: %#v\n-  got: %#v",
 			want, got)
 	}
+}
+
+func TestClientTimeout(t *testing.T) {
+	l, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatalf("failed to start listener: %v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 0) // Use zero timeout here to be able to test. net/internal/socktest would have been nice to be able to use.
+	_, err = DialContext(ctx, "tcp", dialAddr(l))
+
+	t.Log(err)
+
+	if err, ok := err.(net.Error); ok && !err.Timeout() {
+		t.Fatalf("Expected dial timeout error")
+	}
+	cancel()
 }
 
 func testClient(t *testing.T, fn func() [][]byte) (*Client, func()) {

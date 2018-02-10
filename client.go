@@ -3,6 +3,7 @@
 package apcupsd
 
 import (
+	"context"
 	"io"
 	"net"
 )
@@ -22,6 +23,24 @@ func Dial(network string, addr string) (*Client, error) {
 		return nil, err
 	}
 
+	return New(c), nil
+}
+
+// DialContext takes a context and dials a connection to an NIS using the address on the named
+// network, and creates a Client with the connection.
+//
+// The provided Context must be non-nil. If the context expires before
+// the connection is complete, an error is returned. Once successfully
+// connected, any expiration of the context will not affect the
+// connection.
+//
+// Typically, network will be one of: "tcp", "tcp4", or "tcp6".
+func DialContext(ctx context.Context, network, address string) (*Client, error) {
+	var d net.Dialer
+	c, err := d.DialContext(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
 	return New(c), nil
 }
 
