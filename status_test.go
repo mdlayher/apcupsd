@@ -50,6 +50,13 @@ func TestStatus_parseKV(t *testing.T) {
 			},
 		},
 		{
+			desc: "OK time.Time(2)",
+			kv:   "BATTDATE : 07/31/99",
+			s: &Status{
+				BatteryDate: time.Date(1999, time.July, 31, 0, 0, 0, 0, time.UTC),
+			},
+		},
+		{
 			desc: "N/A time.Time",
 			kv:   "XOFFBATT : N/A",
 			s: &Status{
