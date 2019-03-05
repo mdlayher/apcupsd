@@ -15,7 +15,8 @@ const (
 
 	// timeFormatShort is the package time format of date-only timestamps
 	// from a NIS.
-	timeFormatShort = "2006-01-02"
+	timeFormatShort    = "2006-01-02"
+	timeFormatShortest = "01/02/06"
 )
 
 var (
@@ -254,19 +255,19 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	var err error
 	switch k {
 	case keyDate:
-		s.Date, err = parseOptionalTime(timeFormatLong, v)
+		s.Date, err = parseOptionalTime(v, timeFormatLong)
 	case keyStartTime:
-		s.StartTime, err = parseOptionalTime(timeFormatLong, v)
+		s.StartTime, err = parseOptionalTime(v, timeFormatLong)
 	case keyXOnBat:
-		s.XOnBattery, err = parseOptionalTime(timeFormatLong, v)
+		s.XOnBattery, err = parseOptionalTime(v, timeFormatLong)
 	case keyXOffBat:
-		s.XOffBattery, err = parseOptionalTime(timeFormatLong, v)
+		s.XOffBattery, err = parseOptionalTime(v, timeFormatLong)
 	case keyLastStest:
-		s.LastSelftest, err = parseOptionalTime(timeFormatLong, v)
+		s.LastSelftest, err = parseOptionalTime(v, timeFormatLong)
 	case keyBattDate:
-		s.BatteryDate, err = parseOptionalTime(timeFormatShort, v)
+		s.BatteryDate, err = parseOptionalTime(v, timeFormatShort, timeFormatShortest)
 	case keyEndAPC:
-		s.EndAPC, err = parseOptionalTime(timeFormatLong, v)
+		s.EndAPC, err = parseOptionalTime(v, timeFormatLong)
 	default:
 		return false, nil
 	}
@@ -334,10 +335,16 @@ func parseDuration(d string) (time.Duration, error) {
 // In addition to the specified layout, it also accepts the  special value "N/A"
 // (which apcupsd reports for some values and conditions); this value is mapped
 // to time.Time{}. The caller can check for this with time.IsZero().
-func parseOptionalTime(layout, value string) (time.Time, error) {
+func parseOptionalTime(value string, layouts ...string) (time.Time, error) {
 	if value == "N/A" {
 		return time.Time{}, nil
 	}
 
-	return time.Parse(layout, value)
+	for _, la := range layouts {
+		if time, err := time.Parse(la, value); err == nil {
+			return time, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("can't parse time: %q", value)
 }
