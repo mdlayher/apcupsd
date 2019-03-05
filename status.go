@@ -12,14 +12,13 @@ const (
 	// timeFormatLong is the package time format of long timestamps
 	// from a NIS.
 	timeFormatLong = "2006-01-02 15:04:05 -0700"
-
-	// timeFormatShort is the package time format of date-only timestamps
-	// from a NIS.
-	timeFormatShort    = "2006-01-02"
-	timeFormatShortest = "01/02/06"
 )
 
 var (
+	// timeFormatShort is the package time format of date-only timestamps
+	// from a NIS.
+	timeFormatShort = []string{"2006-01-02", "01/02/06"}
+
 	// errInvalidKeyValuePair is returned when a message is not in the expected
 	// "key : value" format.
 	errInvalidKeyValuePair = errors.New("invalid key/value pair")
@@ -265,7 +264,7 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	case keyLastStest:
 		s.LastSelftest, err = parseOptionalTime(v, timeFormatLong)
 	case keyBattDate:
-		s.BatteryDate, err = parseOptionalTime(v, timeFormatShort, timeFormatShortest)
+		s.BatteryDate, err = parseOptionalTime(v, timeFormatShort...)
 	case keyEndAPC:
 		s.EndAPC, err = parseOptionalTime(v, timeFormatLong)
 	default:
