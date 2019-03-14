@@ -17,7 +17,14 @@ const (
 var (
 	// timeFormatShort is the package time format of date-only timestamps
 	// from a NIS.
-	timeFormatShort = []string{"2006-01-02", "01/02/06"}
+	timeFormatShort = []string{
+		"2006-01-02",
+		"01/02/06",
+		// Also try European-style format.
+		// TODO(mdlayher): find a way to always determine if the output is
+		// month-first or day-first.
+		"02/01/06",
+	}
 
 	// errInvalidKeyValuePair is returned when a message is not in the expected
 	// "key : value" format.
@@ -331,7 +338,8 @@ func parseDuration(d string) (time.Duration, error) {
 }
 
 // parseOptionalTime parses a time string.
-// In addition to the specified layout, it also accepts the  special value "N/A"
+//
+// In addition to the specified layouts, it also accepts the special value "N/A"
 // (which apcupsd reports for some values and conditions); this value is mapped
 // to time.Time{}. The caller can check for this with time.IsZero().
 func parseOptionalTime(value string, layouts ...string) (time.Time, error) {
