@@ -24,6 +24,8 @@ var (
 		// TODO(mdlayher): find a way to always determine if the output is
 		// month-first or day-first.
 		"02/01/06",
+		// Also new apcdupd's format
+		"01/02/2006",
 	}
 
 	// errInvalidKeyValuePair is returned when a message is not in the expected
