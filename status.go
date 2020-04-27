@@ -15,17 +15,6 @@ const (
 )
 
 var (
-	// timeFormatShort is the package time format of date-only timestamps
-	// from a NIS.
-	timeFormatShort = []string{
-		"2006-01-02",
-		"01/02/06",
-		// Also try European-style format.
-		// TODO(mdlayher): find a way to always determine if the output is
-		// month-first or day-first.
-		"02/01/06",
-	}
-
 	// errInvalidKeyValuePair is returned when a message is not in the expected
 	// "key : value" format.
 	errInvalidKeyValuePair = errors.New("invalid key/value pair")
@@ -71,7 +60,7 @@ type Status struct {
 	Selftest                    bool
 	StatusFlags                 string
 	SerialNumber                string
-	BatteryDate                 time.Time
+	BatteryDate                 string
 	NominalInputVoltage         float64
 	NominalBatteryVoltage       float64
 	NominalPower                int
@@ -203,6 +192,8 @@ func (s *Status) parseKVString(k string, v string) bool {
 		s.StatusFlags = v
 	case keySerialNo:
 		s.SerialNumber = v
+	case keyBattDate:
+		s.BatteryDate = v
 	case keyFirmware:
 		s.Firmware = v
 	default:
@@ -261,19 +252,17 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	var err error
 	switch k {
 	case keyDate:
-		s.Date, err = parseOptionalTime(v, timeFormatLong)
+		s.Date, err = parseOptionalTime(v)
 	case keyStartTime:
-		s.StartTime, err = parseOptionalTime(v, timeFormatLong)
+		s.StartTime, err = parseOptionalTime(v)
 	case keyXOnBat:
-		s.XOnBattery, err = parseOptionalTime(v, timeFormatLong)
+		s.XOnBattery, err = parseOptionalTime(v)
 	case keyXOffBat:
-		s.XOffBattery, err = parseOptionalTime(v, timeFormatLong)
+		s.XOffBattery, err = parseOptionalTime(v)
 	case keyLastStest:
-		s.LastSelftest, err = parseOptionalTime(v, timeFormatLong)
-	case keyBattDate:
-		s.BatteryDate, err = parseOptionalTime(v, timeFormatShort...)
+		s.LastSelftest, err = parseOptionalTime(v)
 	case keyEndAPC:
-		s.EndAPC, err = parseOptionalTime(v, timeFormatLong)
+		s.EndAPC, err = parseOptionalTime(v)
 	default:
 		return false, nil
 	}
@@ -337,20 +326,16 @@ func parseDuration(d string) (time.Duration, error) {
 	return time.ParseDuration(fmt.Sprintf("%s%s", num, unit))
 }
 
-// parseOptionalTime parses a time string.
-//
-// In addition to the specified layouts, it also accepts the special value "N/A"
+// parseOptionalTime parses a time string but also accepts the special value "N/A"
 // (which apcupsd reports for some values and conditions); this value is mapped
 // to time.Time{}. The caller can check for this with time.IsZero().
-func parseOptionalTime(value string, layouts ...string) (time.Time, error) {
+func parseOptionalTime(value string) (time.Time, error) {
 	if value == "N/A" {
 		return time.Time{}, nil
 	}
 
-	for _, la := range layouts {
-		if time, err := time.Parse(la, value); err == nil {
-			return time, nil
-		}
+	if time, err := time.Parse(timeFormatLong, value); err == nil {
+		return time, nil
 	}
 
 	return time.Time{}, fmt.Errorf("can't parse time: %q", value)

@@ -1,9 +1,10 @@
 package apcupsd
 
 import (
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestStatus_parseKV(t *testing.T) {
@@ -44,23 +45,9 @@ func TestStatus_parseKV(t *testing.T) {
 		},
 		{
 			desc: "OK time.Time",
-			kv:   "BATTDATE : 2016-09-06",
+			kv:   "DATE     : 2020-04-27 10:00:00 -0000",
 			s: &Status{
-				BatteryDate: time.Date(2016, time.September, 6, 0, 0, 0, 0, time.UTC),
-			},
-		},
-		{
-			desc: "OK time.Time(2)",
-			kv:   "BATTDATE : 07/31/99",
-			s: &Status{
-				BatteryDate: time.Date(1999, time.July, 31, 0, 0, 0, 0, time.UTC),
-			},
-		},
-		{
-			desc: "OK time.Time(3)",
-			kv:   "BATTDATE : 28/01/15",
-			s: &Status{
-				BatteryDate: time.Date(2015, time.January, 28, 0, 0, 0, 0, time.UTC),
+				Date: time.Date(2020, time.April, 27, 10, 0, 0, 0, time.UTC),
 			},
 		},
 		{
@@ -142,8 +129,8 @@ func TestStatus_parseKV(t *testing.T) {
 				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v", want, got)
 			}
 
-			if want, got := tt.s, s; !reflect.DeepEqual(want, got) {
-				t.Fatalf("unexpected Status:\n- want: %v\n-  got: %v", want, got)
+			if diff := cmp.Diff(tt.s, s); diff != "" {
+				t.Fatalf("unexpected status (-want +got):\n%s", diff)
 			}
 		})
 	}
