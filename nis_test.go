@@ -75,7 +75,6 @@ type testReadWriterCloser struct {
 	ri int
 	rb []byte
 
-	wi int
 	wb []byte
 }
 
