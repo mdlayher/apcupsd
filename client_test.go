@@ -1,36 +1,35 @@
 package apcupsd
 
 import (
-	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestClientNoKnownKeyValuePairs(t *testing.T) {
-	c, done := testClient(t, func() [][]byte {
+	c := testClient(t, func() [][]byte {
 		lenb, kvb := kvBytes("FOO : BAR")
 		return [][]byte{
 			lenb,
 			kvb,
 		}
 	})
-	defer done()
 
 	s, err := c.Status()
 	if err != nil {
 		t.Fatalf("failed to retrieve status: %v", err)
 	}
 
-	if want, got := new(Status), s; !reflect.DeepEqual(want, got) {
-		t.Fatalf("unexpected Status:\n- want: %v\n-  got: %v",
-			want, got)
+	if diff := cmp.Diff(&Status{}, s); diff != "" {
+		t.Fatalf("unexpected Status (-want +got):\n%s", diff)
 	}
 }
 
@@ -58,7 +57,7 @@ func TestClientAllTypesKeyValuePairs(t *testing.T) {
 		NominalPower:    865,
 	}
 
-	c, done := testClient(t, func() [][]byte {
+	c := testClient(t, func() [][]byte {
 		var out [][]byte
 		for _, kv := range kvs {
 			lenb, kvb := kvBytes(kv)
@@ -68,26 +67,14 @@ func TestClientAllTypesKeyValuePairs(t *testing.T) {
 
 		return out
 	})
-	defer done()
 
 	got, err := c.Status()
 	if err != nil {
 		t.Fatalf("failed to retrieve status: %v", err)
 	}
 
-	// Compare date UNIX timestamps separately for ease of testing
-	if want, got := want.Date.Unix(), got.Date.Unix(); want != got {
-		t.Fatalf("unexpected Date timestamp:\n- want: %v\n-  got: %v",
-			want, got)
-	}
-
-	// Set to zero value for comparison
-	want.Date = time.Time{}
-	got.Date = time.Time{}
-
-	if !reflect.DeepEqual(want, got) {
-		t.Fatalf("unexpected Status:\n- want: %#v\n-  got: %#v",
-			want, got)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("unexpected Status (-want +got):\n%s", diff)
 	}
 }
 
@@ -96,73 +83,78 @@ func TestClientTimeout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to start listener: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 0) // Use zero timeout here to be able to test. net/internal/socktest would have been nice to be able to use.
-	_, err = DialContext(ctx, "tcp", dialAddr(l))
+	defer l.Close()
 
-	t.Log(err)
+	// Force an immediate timeout via context.
+	ctx, cancel := context.WithTimeout(context.Background(), 0)
+	defer cancel()
 
-	if err, ok := err.(net.Error); ok && !err.Timeout() {
-		t.Fatalf("Expected dial timeout error")
+	_, err = DialContext(ctx, "tcp", l.Addr().String())
+
+	var nerr net.Error
+	if !errors.As(err, &nerr) || !nerr.Timeout() {
+		t.Fatalf("expected timeout error, but got: %v", err)
 	}
-	cancel()
 }
 
-func testClient(t *testing.T, fn func() [][]byte) (*Client, func()) {
+func testClient(t *testing.T, fn func() [][]byte) *Client {
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
 		t.Fatalf("failed to start listener: %v", err)
 	}
 
-	wg := new(sync.WaitGroup)
+	var wg sync.WaitGroup
 	wg.Add(1)
 
 	go func() {
+		defer wg.Done()
+
 		c, err := l.Accept()
 		if err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return
 			}
 
-			panic(fmt.Sprintf("failed to accept connection: %v", err))
+			panicf("failed to accept connection: %v", err)
 		}
 
 		in := make([]byte, 128)
 		n, err := c.Read(in)
 		if err != nil {
-			panic(fmt.Sprintf("failed to read from connection: %v", err))
+			panicf("failed to read from connection: %v", err)
 		}
 
 		status := []byte{0, 6, 's', 't', 'a', 't', 'u', 's'}
-		if want, got := status, in[:n]; !bytes.Equal(want, got) {
-			panic(fmt.Sprintf("unexpected request from Client:\n- want: %v\n - got: %v",
-				want, got))
+		if diff := cmp.Diff(status, in[:n]); diff != "" {
+			panicf("unexpected Client request (-want +got):\n%s", diff)
 		}
 
-		// Run against test function and append EOF to end of output bytes
+		// Run against test function and append EOF to end of output bytes.
 		out := fn()
 		out = append(out, []byte{0, 0})
 
 		for _, o := range out {
 			if _, err := c.Write(o); err != nil {
-				panic(fmt.Sprintf("failed to write to connection: %v", err))
+				panicf("failed to write to connection: %v", err)
 			}
 		}
-
-		wg.Done()
 	}()
 
-	c, err := Dial("tcp", dialAddr(l))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	c, err := DialContext(ctx, "tcp", l.Addr().String())
 	if err != nil {
 		t.Fatalf("failed to dial Client: %v", err)
 	}
 
-	done := func() {
+	t.Cleanup(func() {
+		cancel()
 		wg.Wait()
 		_ = c.Close()
 		_ = l.Close()
-	}
+	})
 
-	return c, done
+	return c
 }
 
 // kvBytes is a helper to generate length and key/value byte buffers.
@@ -173,10 +165,6 @@ func kvBytes(kv string) ([]byte, []byte) {
 	return lenb, []byte(kv)
 }
 
-// dialAddr returns a valid net.Dial address to dial using network "tcp".
-func dialAddr(ln net.Listener) string {
-	addr := ln.Addr().String()
-	addr = strings.TrimPrefix(addr, "[::]")
-	addr = strings.TrimPrefix(addr, "0.0.0.0")
-	return addr
+func panicf(format string, a ...interface{}) {
+	panic(fmt.Sprintf(format, a...))
 }

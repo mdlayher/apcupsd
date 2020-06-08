@@ -1,11 +1,14 @@
 package apcupsd
 
 import (
-	"bytes"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"io"
 	"math"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_nisReadWriteCloserRead(t *testing.T) {
@@ -25,21 +28,17 @@ func Test_nisReadWriteCloserRead(t *testing.T) {
 			t.Fatalf("failed to read: %v", err)
 		}
 
-		if want, got := in, out[:n]; !bytes.Equal(want, got) {
-			t.Fatalf("unexpected byte output:\n- want: %v\n-  got: %v",
-				want, got)
+		if diff := cmp.Diff(in, out[:n]); diff != "" {
+			t.Fatalf("unexpected byte output (-want +got):\n%s", diff)
 		}
 	}
 }
 
 func Test_nisReadWriteCloserWriteBufferTooLarge(t *testing.T) {
 	rwc := testRWC(nil, nil)
-
 	_, err := rwc.Write(make([]byte, math.MaxUint16+1))
-
-	if want, got := errBufferTooLarge, err; want != got {
-		t.Fatalf("unexpected error:\n- want: %v\n-  got: %v",
-			want, got)
+	if !errors.Is(err, errBufferTooLarge) {
+		t.Fatalf("expected buffer too large, but got: %v", err)
 	}
 }
 
@@ -54,13 +53,12 @@ func Test_nisReadWriteCloserWrite(t *testing.T) {
 		t.Fatalf("failed to write: %v", err)
 	}
 
-	// Write prepends length; two bytes
+	// Write prepends length; two bytes.
 	n += 2
 	in = append([]byte{0, byte(len(in))}, in...)
 
-	if want, got := in, out[:n]; !bytes.Equal(want, got) {
-		t.Fatalf("unexpected byte output:\n- want: %v\n-  got: %v",
-			want, got)
+	if diff := cmp.Diff(in, out[:n]); diff != "" {
+		t.Fatalf("unexpected byte output (-want +got):\n%s", diff)
 	}
 }
 
@@ -86,18 +84,20 @@ func (rwc *testReadWriterCloser) Read(b []byte) (int, error) {
 
 	switch rwc.ri {
 	case 0:
-		// Send length of read buffer
+		// Send length of read buffer.
 		binary.BigEndian.PutUint16(b[0:2], uint16(len(rwc.rb)))
 		return 2, nil
 	case 1:
-		// Send read buffer
+		// Send the read buffer.
 		n := copy(b, rwc.rb)
 		return n, nil
+	case 2:
+		// Signal EOF to nisReadWriteCloser
+		binary.BigEndian.PutUint16(b[0:2], 0)
+		return 2, nil
+	default:
+		panic(fmt.Sprintf("too many calls to testReadWriteCloser.Read: %d", rwc.ri))
 	}
-
-	// Signal EOF to nisReadWriteCloser
-	binary.BigEndian.PutUint16(b[0:2], 0)
-	return 2, nil
 }
 
 func (rwc *testReadWriterCloser) Write(b []byte) (int, error) {

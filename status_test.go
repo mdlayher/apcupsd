@@ -1,6 +1,7 @@
 package apcupsd
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -120,13 +121,15 @@ func TestStatus_parseKV(t *testing.T) {
 			s := new(Status)
 			err := s.parseKV(tt.kv)
 
-			// Simplify test table by nil'ing Status on errors
+			// Simplify test table by nil'ing Status on errors.
 			if err != nil {
 				s = nil
 			}
 
-			if want, got := tt.err, err; want != got {
-				t.Fatalf("unexpected error:\n- want: %v\n-  got: %v", want, got)
+			if !errors.Is(err, tt.err) {
+				if diff := cmp.Diff(err.Error(), tt.err.Error()); diff != "" {
+					t.Fatalf("unexpected error (-want +got):\n%s", diff)
+				}
 			}
 
 			if diff := cmp.Diff(tt.s, s); diff != "" {

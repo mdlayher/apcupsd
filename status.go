@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	// timeFormatLong is the package time format of long timestamps
-	// from a NIS.
+	// timeFormatLong is the package time format of long timestamps from a NIS.
 	timeFormatLong = "2006-01-02 15:04:05 -0700"
 )
 
@@ -24,8 +23,8 @@ var (
 	errInvalidDuration = errors.New("invalid time duration")
 )
 
-// Status is the status of an APC Uninterruptible Power Supply (UPS), as returned
-// by a NIS.
+// Status is the status of an APC Uninterruptible Power Supply (UPS), as
+// returned by a NIS.
 type Status struct {
 	APC                         string
 	Date                        time.Time
@@ -71,8 +70,8 @@ type Status struct {
 	LineFrequency               float64
 }
 
-// parseKV parses an input key/value string in "key : value" format, and
-// sets the appropriate struct field from the input data.
+// parseKV parses an input key/value string in "key : value" format, and sets
+// the appropriate struct field from the input data.
 func (s *Status) parseKV(kv string) error {
 	sp := strings.SplitN(kv, ":", 2)
 	if len(sp) != 2 {
@@ -82,7 +81,7 @@ func (s *Status) parseKV(kv string) error {
 	k := strings.TrimSpace(sp[0])
 	v := strings.TrimSpace(sp[1])
 
-	// Attempt to match various common data types
+	// Attempt to match various common data types.
 
 	if match := s.parseKVString(k, v); match {
 		return nil
@@ -100,7 +99,7 @@ func (s *Status) parseKV(kv string) error {
 		return err
 	}
 
-	// Attempt to match uncommon data types
+	// Attempt to match uncommon data types.
 
 	var err error
 	switch k {
@@ -162,8 +161,8 @@ const (
 	keyLineFrequency = "LINEFREQ"
 )
 
-// parseKVString parses a simple string into the appropriate Status field.
-// It returns true if a field was matched, and false if not.
+// parseKVString parses a simple string into the appropriate Status field. It
+// returns true if a field was matched, and false if not.
 func (s *Status) parseKVString(k string, v string) bool {
 	switch k {
 	case keyAPC:
@@ -203,12 +202,12 @@ func (s *Status) parseKVString(k string, v string) bool {
 	return true
 }
 
-// parseKVFloat parses a float64 value into the appropriate Status field.
-// It returns true if a field was matched, and false if not.
+// parseKVFloat parses a float64 value into the appropriate Status field. It
+// returns true if a field was matched, and false if not.
 func (s *Status) parseKVFloat(k string, v string) (bool, error) {
 	f := strings.SplitN(v, " ", 2)
 
-	// Save repetition for function calls
+	// Save repetition for function calls.
 	parse := func() (float64, error) {
 		return strconv.ParseFloat(f[0], 64)
 	}
@@ -246,8 +245,8 @@ func (s *Status) parseKVFloat(k string, v string) (bool, error) {
 	return true, err
 }
 
-// parseKVTime parses a time.Time value into the appropriate Status field.
-// It returns true if a field was matched, and false if not.
+// parseKVTime parses a time.Time value into the appropriate Status field. It
+// returns true if a field was matched, and false if not.
 func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	var err error
 	switch k {
@@ -270,10 +269,10 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 	return true, err
 }
 
-// parseKVDuration parses a time.Duration into the appropriate Status field.
-// It returns true if a field was matched, and false if not.
+// parseKVDuration parses a time.Duration into the appropriate Status field. It
+// returns true if a field was matched, and false if not.
 func (s *Status) parseKVDuration(k string, v string) (bool, error) {
-	// Save repetition for function calls
+	// Save repetition for function calls.
 	parse := func() (time.Duration, error) {
 		return parseDuration(v)
 	}
@@ -304,8 +303,7 @@ func (s *Status) parseKVDuration(k string, v string) (bool, error) {
 	return true, err
 }
 
-// parseDuration parses a duration value returned from a NIS as a
-// time.Duration.
+// parseDuration parses a duration value returned from a NIS as a time.Duration.
 func parseDuration(d string) (time.Duration, error) {
 	ss := strings.SplitN(d, " ", 2)
 	if len(ss) != 2 {
@@ -315,7 +313,7 @@ func parseDuration(d string) (time.Duration, error) {
 	num := ss[0]
 	unit := ss[1]
 
-	// Normalize units into ones that time.ParseDuration expects
+	// Normalize units into ones that time.ParseDuration expects.
 	switch strings.ToLower(unit) {
 	case "minutes":
 		unit = "m"
@@ -326,9 +324,9 @@ func parseDuration(d string) (time.Duration, error) {
 	return time.ParseDuration(fmt.Sprintf("%s%s", num, unit))
 }
 
-// parseOptionalTime parses a time string but also accepts the special value "N/A"
-// (which apcupsd reports for some values and conditions); this value is mapped
-// to time.Time{}. The caller can check for this with time.IsZero().
+// parseOptionalTime parses a time string but also accepts the special value
+// "N/A" (which apcupsd reports for some values and conditions); this value is
+// mapped to time.Time{}. The caller can check for this with time.IsZero().
 func parseOptionalTime(value string) (time.Time, error) {
 	if value == "N/A" {
 		return time.Time{}, nil

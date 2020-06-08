@@ -33,12 +33,12 @@ func (rwc *nisReadWriteCloser) Read(b []byte) (int, error) {
 	rwc.mu.Lock()
 	defer rwc.mu.Unlock()
 
-	// Read two byte length of next data
+	// Read two byte length of next data.
 	if _, err := io.ReadFull(rwc.rwc, rwc.lenb); err != nil {
 		return 0, err
 	}
 
-	// When no more data returned from server, return io.EOF
+	// When no more data returned from server, return io.EOF.
 	length := binary.BigEndian.Uint16(rwc.lenb)
 	if length == 0 {
 		return 0, io.EOF
@@ -50,13 +50,13 @@ func (rwc *nisReadWriteCloser) Read(b []byte) (int, error) {
 var (
 	// errBufferTooLarge indicates that nisReadWriteCloser.Write was passed a
 	// buffer that is too large to send to the NIS.
-	errBufferTooLarge = errors.New("buffer too large; must be size of uint16 or less")
+	errBufferTooLarge = errors.New("apcupsd: buffer too large; must be size of uint16 or less")
 )
 
 // Write writes messages to the NIS using its protocol by prepending each
 // message with its 2 byte length.
 func (rwc *nisReadWriteCloser) Write(b []byte) (int, error) {
-	// Cannot write more than math.MaxUint16 bytes
+	// Cannot write more than math.MaxUint16 bytes.
 	if len(b) > math.MaxUint16 {
 		return 0, errBufferTooLarge
 	}
