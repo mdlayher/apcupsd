@@ -286,8 +286,9 @@ func (s *Status) parseKVDuration(k string, v string) (bool, error) {
 	case keyMaxTime:
 		s.MaximumTime, err = parse()
 	case keyAlarmDel:
-		// No alarm delay configured.
-		if v == "No alarm" {
+		valueText := strings.ToLower(v)
+		// When no alarm delay duration is set, don't attempt to parse a number.
+		if valueText == "no alarm" || valueText == "low battery" || valueText == "always" {
 			break
 		}
 
