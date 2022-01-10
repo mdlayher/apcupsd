@@ -26,48 +26,96 @@ var (
 // Status is the status of an APC Uninterruptible Power Supply (UPS), as
 // returned by a NIS.
 type Status struct {
-	APC                         string
-	Date                        time.Time
-	Hostname                    string
-	Version                     string
-	UPSName                     string
-	Cable                       string
-	Driver                      string
-	UPSMode                     string
-	StartTime                   time.Time
-	Model                       string
-	Status                      string
-	LineVoltage                 float64
-	LoadPercent                 float64
-	BatteryChargePercent        float64
-	TimeLeft                    time.Duration
+	// Header record indicating the STATUS format revision level, the number of records that follow the
+	// APC statement, and the number of bytes that follow the record.
+	APC string
+	// The date and time that the information was last obtained from the UPS.
+	Date time.Time
+	// The name of the machine that collected the UPS data.
+	Hostname string
+	// The apcupsd release number, build date, and platform.
+	Version string
+	// The name of the UPS as stored in the EEPROM or in the UPSNAME directive in the configuration file.
+	UPSName string
+	// The cable as specified in the configuration file (UPSCABLE).
+	Cable string
+	// The driver being used to communicate with the UPS.
+	Driver string
+	// The mode in which apcupsd is operating as specified in the configuration file (UPSMODE)
+	UPSMode string
+	// The time/date that apcupsd was started.
+	StartTime time.Time
+	// The UPS model as derived from information from the UPS.
+	Model string
+	// The current status of the UPS (ONLINE, ONBATT, etc.)
+	Status string
+	// The current line voltage as returned by the UPS.
+	LineVoltage float64
+	// The percentage of load capacity as estimated by the UPS.
+	LoadPercent float64
+	// The percentage charge on the batteries.
+	BatteryChargePercent float64
+	// The remaining runtime left on batteries as estimated by the UPS.
+	TimeLeft time.Duration
+	// If the battery charge percentage (BCHARGE) drops below this value, apcupsd will shutdown your
+	// system. Value is set in the configuration file (BATTERYLEVEL)
 	MinimumBatteryChargePercent float64
-	MinimumTimeLeft             time.Duration
-	MaximumTime                 time.Duration
-	Sense                       string
-	LowTransferVoltage          float64
-	HighTransferVoltage         float64
-	AlarmDel                    time.Duration
-	BatteryVoltage              float64
-	LastTransfer                string
-	NumberTransfers             int
-	XOnBattery                  time.Time
-	TimeOnBattery               time.Duration
-	CumulativeTimeOnBattery     time.Duration
-	XOffBattery                 time.Time
-	LastSelftest                time.Time
-	Selftest                    bool
-	StatusFlags                 string
-	SerialNumber                string
-	BatteryDate                 string
-	NominalInputVoltage         float64
-	NominalBatteryVoltage       float64
-	NominalPower                int
-	Firmware                    string
-	EndAPC                      time.Time
-	InternalTemp                float64
-	OutputVoltage               float64
-	LineFrequency               float64
+	// apcupsd will shutdown your system if the remaining runtime equals or is below this point. Value is set
+	// in the configuration file (MINUTES)
+	MinimumTimeLeft time.Duration
+	// apcupsd will shutdown your system if the time on batteries exceeds this value. A value of zero
+	// disables the feature. Value is set in the configuration file (TIMEOUT)
+	MaximumTime time.Duration
+	// The sensitivity level of the UPS to line voltage fluctuations.
+	Sense string
+	// The line voltage below which the UPS will switch to batteries.
+	LowTransferVoltage float64
+	// The line voltage above which the UPS will switch to batteries.
+	HighTransferVoltage float64
+	// The delay period for the UPS alarm.
+	AlarmDel time.Duration
+	// Battery voltage as supplied by the UPS.
+	BatteryVoltage float64
+	// The reason for the last transfer to batteries.
+	LastTransfer string
+	// The number of transfers to batteries since apcupsd startup.
+	NumberTransfers int
+	// Time and date of last transfer to batteries, or N/A.
+	XOnBattery time.Time
+	// Time in seconds currently on batteries, or 0.
+	TimeOnBattery time.Duration
+	// Total (cumulative) time on batteries in seconds since apcupsd startup.
+	CumulativeTimeOnBattery time.Duration
+	// Time and date of last transfer from batteries, or N/A.
+	XOffBattery time.Time
+	// The interval in hours between automatic self tests.
+	LastSelftest time.Time
+	// The results of the last self test, and may have the following values:
+	// • OK: self test indicates good battery
+	// • BT: self test failed due to insufficient battery capacity
+	// • NG: self test failed due to overload
+	// • NO: No results (i.e. no self test performed in the last 5 minutes)
+	Selftest bool
+	// Status flag. English version is given by STATUS.
+	StatusFlags string
+	// The UPS serial number
+	SerialNumber string
+	// The date that batteries were last replaced
+	BatteryDate string
+	// The input voltage that the UPS is configured to expect.
+	NominalInputVoltage float64
+	// The nominal battery voltage.
+	NominalBatteryVoltage float64
+	// The maximum power in Watts that the UPS is designed to supply.
+	NominalPower int
+	// The firmware revision number as reported by the UPS.
+	Firmware string
+	// The time and date that the STATUS record was written.
+	EndAPC time.Time
+	// The ambient temperature as measured by the UPS.
+	InternalTemp  float64
+	OutputVoltage float64
+	LineFrequency float64
 }
 
 // parseKV parses an input key/value string in "key : value" format, and sets
