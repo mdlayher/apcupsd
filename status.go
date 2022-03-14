@@ -78,8 +78,10 @@ func (s *Status) parseKV(kv string) error {
 		return errInvalidKeyValuePair
 	}
 
-	k := strings.TrimSpace(sp[0])
-	v := strings.TrimSpace(sp[1])
+	var (
+		k = key(strings.TrimSpace(sp[0]))
+		v = strings.TrimSpace(sp[1])
+	)
 
 	// Attempt to match various common data types.
 
@@ -115,55 +117,60 @@ func (s *Status) parseKV(kv string) error {
 	return err
 }
 
+// TODO(mdlayher): rework parsing code and add enumcheck.
+
+// A key is a field key for an apcupsd status line.
+type key string
+
 // List of keys sent by a NIS, used to map values to Status fields.
 const (
-	keyAPC           = "APC"
-	keyDate          = "DATE"
-	keyHostname      = "HOSTNAME"
-	keyVersion       = "VERSION"
-	keyUPSName       = "UPSNAME"
-	keyCable         = "CABLE"
-	keyDriver        = "DRIVER"
-	keyUPSMode       = "UPSMODE"
-	keyStartTime     = "STARTTIME"
-	keyModel         = "MODEL"
-	keyStatus        = "STATUS"
-	keyLineV         = "LINEV"
-	keyLoadPct       = "LOADPCT"
-	keyBCharge       = "BCHARGE"
-	keyTimeLeft      = "TIMELEFT"
-	keyMBattChg      = "MBATTCHG"
-	keyMinTimeL      = "MINTIMEL"
-	keyMaxTime       = "MAXTIME"
-	keySense         = "SENSE"
-	keyLoTrans       = "LOTRANS"
-	keyHiTrans       = "HITRANS"
-	keyAlarmDel      = "ALARMDEL"
-	keyBattV         = "BATTV"
-	keyLastXfer      = "LASTXFER"
-	keyNumXfers      = "NUMXFERS"
-	keyXOnBat        = "XONBATT"
-	keyTOnBatt       = "TONBATT"
-	keyCumOnBatt     = "CUMONBATT"
-	keyXOffBat       = "XOFFBATT"
-	keyLastStest     = "LASTSTEST"
-	keySelftest      = "SELFTEST"
-	keyStatFlag      = "STATFLAG"
-	keySerialNo      = "SERIALNO"
-	keyBattDate      = "BATTDATE"
-	keyNomInV        = "NOMINV"
-	keyNomBattV      = "NOMBATTV"
-	keyNomPower      = "NOMPOWER"
-	keyFirmware      = "FIRMWARE"
-	keyEndAPC        = "END APC"
-	keyITemp         = "ITEMP"
-	keyOutV          = "OUTPUTV"
-	keyLineFrequency = "LINEFREQ"
+	keyAlarmDel      key = "ALARMDEL"
+	keyAPC           key = "APC"
+	keyBattDate      key = "BATTDATE"
+	keyBattV         key = "BATTV"
+	keyBCharge       key = "BCHARGE"
+	keyCable         key = "CABLE"
+	keyCumOnBatt     key = "CUMONBATT"
+	keyDate          key = "DATE"
+	keyDriver        key = "DRIVER"
+	keyEndAPC        key = "END APC"
+	keyFirmware      key = "FIRMWARE"
+	keyHiTrans       key = "HITRANS"
+	keyHostname      key = "HOSTNAME"
+	keyITemp         key = "ITEMP"
+	keyLastStest     key = "LASTSTEST"
+	keyLastXfer      key = "LASTXFER"
+	keyLineFrequency key = "LINEFREQ"
+	keyLineV         key = "LINEV"
+	keyLoadPct       key = "LOADPCT"
+	keyLoTrans       key = "LOTRANS"
+	keyMaxTime       key = "MAXTIME"
+	keyMBattChg      key = "MBATTCHG"
+	keyMinTimeL      key = "MINTIMEL"
+	keyModel         key = "MODEL"
+	keyNomBattV      key = "NOMBATTV"
+	keyNomInV        key = "NOMINV"
+	keyNomPower      key = "NOMPOWER"
+	keyNumXfers      key = "NUMXFERS"
+	keyOutV          key = "OUTPUTV"
+	keySelftest      key = "SELFTEST"
+	keySense         key = "SENSE"
+	keySerialNo      key = "SERIALNO"
+	keyStartTime     key = "STARTTIME"
+	keyStatFlag      key = "STATFLAG"
+	keyStatus        key = "STATUS"
+	keyTimeLeft      key = "TIMELEFT"
+	keyTOnBatt       key = "TONBATT"
+	keyUPSMode       key = "UPSMODE"
+	keyUPSName       key = "UPSNAME"
+	keyVersion       key = "VERSION"
+	keyXOffBat       key = "XOFFBATT"
+	keyXOnBat        key = "XONBATT"
 )
 
 // parseKVString parses a simple string into the appropriate Status field. It
 // returns true if a field was matched, and false if not.
-func (s *Status) parseKVString(k string, v string) bool {
+func (s *Status) parseKVString(k key, v string) bool {
 	switch k {
 	case keyAPC:
 		s.APC = v
@@ -204,7 +211,7 @@ func (s *Status) parseKVString(k string, v string) bool {
 
 // parseKVFloat parses a float64 value into the appropriate Status field. It
 // returns true if a field was matched, and false if not.
-func (s *Status) parseKVFloat(k string, v string) (bool, error) {
+func (s *Status) parseKVFloat(k key, v string) (bool, error) {
 	f := strings.SplitN(v, " ", 2)
 
 	// Save repetition for function calls.
@@ -247,7 +254,7 @@ func (s *Status) parseKVFloat(k string, v string) (bool, error) {
 
 // parseKVTime parses a time.Time value into the appropriate Status field. It
 // returns true if a field was matched, and false if not.
-func (s *Status) parseKVTime(k string, v string) (bool, error) {
+func (s *Status) parseKVTime(k key, v string) (bool, error) {
 	var err error
 	switch k {
 	case keyDate:
@@ -271,7 +278,7 @@ func (s *Status) parseKVTime(k string, v string) (bool, error) {
 
 // parseKVDuration parses a time.Duration into the appropriate Status field. It
 // returns true if a field was matched, and false if not.
-func (s *Status) parseKVDuration(k string, v string) (bool, error) {
+func (s *Status) parseKVDuration(k key, v string) (bool, error) {
 	// Save repetition for function calls.
 	parse := func() (time.Duration, error) {
 		return parseDuration(v)
@@ -310,8 +317,10 @@ func parseDuration(d string) (time.Duration, error) {
 		return 0, errInvalidDuration
 	}
 
-	num := ss[0]
-	unit := ss[1]
+	var (
+		num  = ss[0]
+		unit = ss[1]
+	)
 
 	// Normalize units into ones that time.ParseDuration expects.
 	switch strings.ToLower(unit) {
