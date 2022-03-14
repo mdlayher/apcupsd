@@ -293,12 +293,9 @@ func (s *Status) parseKVDuration(k key, v string) (bool, error) {
 	case keyMaxTime:
 		s.MaximumTime, err = parse()
 	case keyAlarmDel:
-		// No alarm delay configured.
-		if v == "No alarm" {
-			break
-		}
-
-		s.AlarmDel, err = parse()
+		// This field can take a variety of formats, so just ignore any error.
+		s.AlarmDel, _ = parse()
+		return true, nil
 	case keyTOnBatt:
 		s.TimeOnBattery, err = parse()
 	case keyCumOnBatt:

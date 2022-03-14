@@ -9,7 +9,7 @@ import (
 )
 
 func TestStatus_parseKV(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		desc string
 		kv   string
 		s    *Status
@@ -88,7 +88,7 @@ func TestStatus_parseKV(t *testing.T) {
 		},
 		{
 			desc: "No alarm ALARMDEL",
-			kv:   "ALARMDEL: No alarm",
+			kv:   "ALARMDEL: No alarm or whatever",
 			s: &Status{
 				AlarmDel: 0,
 			},
@@ -120,7 +120,6 @@ func TestStatus_parseKV(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			s := new(Status)
 			err := s.parseKV(tt.kv)
-
 			// Simplify test table by nil'ing Status on errors.
 			if err != nil {
 				s = nil
