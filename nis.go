@@ -47,11 +47,9 @@ func (rwc *nisReadWriteCloser) Read(b []byte) (int, error) {
 	return io.ReadFull(rwc.rwc, b[:length])
 }
 
-var (
-	// errBufferTooLarge indicates that nisReadWriteCloser.Write was passed a
-	// buffer that is too large to send to the NIS.
-	errBufferTooLarge = errors.New("apcupsd: buffer too large; must be size of uint16 or less")
-)
+// errBufferTooLarge indicates that nisReadWriteCloser.Write was passed a
+// buffer that is too large to send to the NIS.
+var errBufferTooLarge = errors.New("apcupsd: buffer too large; must be size of uint16 or less")
 
 // Write writes messages to the NIS using its protocol by prepending each
 // message with its 2 byte length.
