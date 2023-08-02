@@ -116,6 +116,7 @@ type Status struct {
 	InternalTemp  float64
 	OutputVoltage float64
 	LineFrequency float64
+	OutputAmps    float64
 }
 
 // parseKV parses an input key/value string in "key : value" format, and sets
@@ -201,6 +202,7 @@ const (
 	keyNomPower      key = "NOMPOWER"
 	keyNumXfers      key = "NUMXFERS"
 	keyOutV          key = "OUTPUTV"
+	keyOutputAmps    key = "OUTCURNT"
 	keySelftest      key = "SELFTEST"
 	keySense         key = "SENSE"
 	keySerialNo      key = "SERIALNO"
@@ -293,6 +295,8 @@ func (s *Status) parseKVFloat(k key, v string) (bool, error) {
 		s.OutputVoltage, err = parse()
 	case keyLineFrequency:
 		s.LineFrequency, err = parse()
+	case keyOutputAmps:
+		s.OutputAmps, err = parse()
 	default:
 		return false, nil
 	}
