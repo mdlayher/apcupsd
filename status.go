@@ -393,6 +393,9 @@ func parseOptionalTime(value string) (time.Time, error) {
 	if time, err := time.Parse(timeFormatLong, value); err == nil {
 		return time, nil
 	}
+	if time, err := time.Parse(time.UnixDate, value); err == nil {
+		return time, nil
+	}
 
 	return time.Time{}, fmt.Errorf("can't parse time: %q", value)
 }
